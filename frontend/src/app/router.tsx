@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import { createBrowserRouter } from 'react-router'
 
 import { AppLayout } from '@/components/layout/AppLayout'
+import { RootErrorBoundary, RouteErrorBoundary } from '@/components/RouteErrorBoundary'
 
 import type { RouteHandle } from './route-handle'
 
@@ -14,30 +15,39 @@ export const router = createBrowserRouter([
   {
     path: '/',
     Component: AppLayout,
+    // Only if the shell itself fails; page errors are caught below, inside the shell.
+    ErrorBoundary: RootErrorBoundary,
     hydrateFallbackElement: null,
     children: [
       {
-        index: true,
-        handle: { crumb: 'Dashboard' } satisfies RouteHandle,
-        lazy: lazyPage(() => import('@/pages/HomePage')),
-      },
-      {
-        // Parent route so nested pages get a "Patients ›" breadcrumb.
-        path: 'patients',
-        handle: { crumb: 'Patients' } satisfies RouteHandle,
+        // Pathless wrapper: a page that throws (or fails to load) shows an error in place of
+        // the page while the sidebar and header keep working.
+        ErrorBoundary: RouteErrorBoundary,
         children: [
-          { index: true, lazy: lazyPage(() => import('@/pages/PatientsPage')) },
           {
-            path: ':patientId',
-            handle: { crumb: 'Patient details' } satisfies RouteHandle,
-            lazy: lazyPage(() => import('@/pages/PatientDetailPage')),
+            index: true,
+            handle: { crumb: 'Dashboard' } satisfies RouteHandle,
+            lazy: lazyPage(() => import('@/pages/HomePage')),
+          },
+          {
+            // Parent route so nested pages get a "Patients ›" breadcrumb.
+            path: 'patients',
+            handle: { crumb: 'Patients' } satisfies RouteHandle,
+            children: [
+              { index: true, lazy: lazyPage(() => import('@/pages/PatientsPage')) },
+              {
+                path: ':patientId',
+                handle: { crumb: 'Patient details' } satisfies RouteHandle,
+                lazy: lazyPage(() => import('@/pages/PatientDetailPage')),
+              },
+            ],
+          },
+          {
+            path: '*',
+            handle: { crumb: 'Not found' } satisfies RouteHandle,
+            lazy: lazyPage(() => import('@/pages/NotFoundPage')),
           },
         ],
-      },
-      {
-        path: '*',
-        handle: { crumb: 'Not found' } satisfies RouteHandle,
-        lazy: lazyPage(() => import('@/pages/NotFoundPage')),
       },
     ],
   },

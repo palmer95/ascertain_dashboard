@@ -1,7 +1,14 @@
 import { useEffect } from 'react'
-import { keepPreviousData, queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  queryOptions,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query'
 
 import { api, unwrap } from '@/api/client'
+import type { PatientPage } from '@/api/schema'
 
 import { PAGE_SIZE, type PatientListParams } from './list-params'
 
@@ -10,6 +17,8 @@ export const patientKeys = {
   all: ['patients'] as const,
   lists: () => [...patientKeys.all, 'list'] as const,
   list: (query: object) => [...patientKeys.lists(), query] as const,
+  details: () => [...patientKeys.all, 'detail'] as const,
+  detail: (id: string) => [...patientKeys.details(), id] as const,
 }
 
 export function patientListQuery({ q, status, sort, order, page }: PatientListParams) {
@@ -46,4 +55,37 @@ export function usePatientList(params: PatientListParams) {
   }, [hasNextPage, isPlaceholderData, params, queryClient])
 
   return result
+}
+
+export function patientDetailQuery(id: string) {
+  return queryOptions({
+    queryKey: patientKeys.detail(id),
+    queryFn: ({ signal }) =>
+      unwrap(api.GET('/patients/{patient_id}', { params: { path: { patient_id: id } }, signal })),
+  })
+}
+
+/** The patient's row from any cached list page, if the user arrived from the list. */
+function findInCachedLists(queryClient: QueryClient, id: string) {
+  for (const [, page] of queryClient.getQueriesData<PatientPage>({
+    queryKey: patientKeys.lists(),
+  })) {
+    const patient = page?.items.find((item) => item.id === id)
+    if (patient) return patient
+  }
+  return undefined
+}
+
+/**
+ * One patient. Coming from the list, the row already in cache renders instantly as
+ * placeholder data while the fresh record loads (list rows are full `PatientRead` objects).
+ * Pass `enabled: false` to skip the request entirely (e.g. for an ID that can't be valid).
+ */
+export function usePatient(id: string, { enabled = true } = {}) {
+  const queryClient = useQueryClient()
+  return useQuery({
+    ...patientDetailQuery(id),
+    enabled,
+    placeholderData: () => findInCachedLists(queryClient, id),
+  })
 }
