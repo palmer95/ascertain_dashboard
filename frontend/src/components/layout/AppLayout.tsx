@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router'
+import { Outlet, ScrollRestoration } from 'react-router'
 
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
@@ -30,6 +30,8 @@ export function AppLayout() {
           <Outlet />
         </div>
       </SidebarInset>
+      {/* New pages (incl. list page changes) start at the top; Back restores the old position. */}
+      <ScrollRestoration />
     </SidebarProvider>
   )
 }
