@@ -11,6 +11,22 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        // Vendor code changes far less often than app code; separate chunks stay cached in
+        // the browser across deploys. Page-specific dependencies are left to lazy chunks.
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            { name: 'router', test: /node_modules[\\/]react-router[\\/]/ },
+            { name: 'ui', test: /node_modules[\\/](@base-ui|@floating-ui)[\\/]/ },
+            { name: 'query', test: /node_modules[\\/]@tanstack[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       // Mirrors nginx in production: /api/* goes to the backend with the prefix stripped,

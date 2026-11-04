@@ -1,7 +1,15 @@
+import type { ComponentType } from 'react'
 import { createBrowserRouter } from 'react-router'
+
 import { AppLayout } from '@/components/layout/AppLayout'
 
-// Each page is code-split and loaded on first navigation.
+import type { RouteHandle } from './route-handle'
+
+/** Code-split a page: its chunk loads on first navigation to the route. */
+function lazyPage(load: () => Promise<{ default: ComponentType }>) {
+  return async () => ({ Component: (await load()).default })
+}
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -10,21 +18,26 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        lazy: async () => ({ Component: (await import('@/pages/HomePage')).default }),
+        handle: { crumb: 'Dashboard' } satisfies RouteHandle,
+        lazy: lazyPage(() => import('@/pages/HomePage')),
       },
       {
+        // Parent route so nested pages get a "Patients ›" breadcrumb.
         path: 'patients',
-        lazy: async () => ({ Component: (await import('@/pages/PatientsPage')).default }),
-      },
-      {
-        path: 'patients/:patientId',
-        lazy: async () => ({
-          Component: (await import('@/pages/PatientDetailPage')).default,
-        }),
+        handle: { crumb: 'Patients' } satisfies RouteHandle,
+        children: [
+          { index: true, lazy: lazyPage(() => import('@/pages/PatientsPage')) },
+          {
+            path: ':patientId',
+            handle: { crumb: 'Patient details' } satisfies RouteHandle,
+            lazy: lazyPage(() => import('@/pages/PatientDetailPage')),
+          },
+        ],
       },
       {
         path: '*',
-        lazy: async () => ({ Component: (await import('@/pages/NotFoundPage')).default }),
+        handle: { crumb: 'Not found' } satisfies RouteHandle,
+        lazy: lazyPage(() => import('@/pages/NotFoundPage')),
       },
     ],
   },
