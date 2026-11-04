@@ -21,6 +21,11 @@
       "@/*": ["./src/*"]
     },
 
+    /* Type checking (strict is explicit even though TS 6 defaults it on) */
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
