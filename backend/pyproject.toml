@@ -4,8 +4,11 @@ version = "0.1.0"
 description = "FastAPI backend for the healthcare patient dashboard"
 requires-python = ">=3.14"
 dependencies = [
+    "alembic>=1.20",
+    "asyncpg>=0.32",
     "fastapi[standard]>=0.162",
     "pydantic-settings>=2.16",
+    "sqlalchemy[asyncio]>=2.1",
 ]
 
 [dependency-groups]
@@ -31,6 +34,10 @@ select = [
     "ASYNC", # flake8-async
     "RUF",   # ruff-specific
 ]
+
+[tool.ruff.lint.isort]
+# The local alembic/ migrations folder would otherwise make isort treat the package as first-party.
+known-third-party = ["alembic"]
 
 [tool.mypy]
 python_version = "3.14"
