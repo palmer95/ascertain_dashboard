@@ -18,6 +18,11 @@ class Base(DeclarativeBase):
 
 
 class TimestampMixin:
+    # Fetch server-generated values (created_at, and updated_at's onupdate) via RETURNING.
+    # Otherwise SQLAlchemy expires them after an UPDATE, and reading them in async code
+    # would trigger a lazy load and raise MissingGreenlet.
+    __mapper_args__ = {"eager_defaults": True}  # noqa: RUF012
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

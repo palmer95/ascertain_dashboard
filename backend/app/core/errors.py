@@ -22,15 +22,20 @@ _LOCATION_PREFIXES = frozenset({"body", "query", "path", "header", "cookie"})
 # Pydantic prefixes messages raised from custom validators; the prefix is noise to users.
 _VALUE_ERROR_PREFIX = "Value error, "
 
-# For OpenAPI: routers declare these so the docs and generated client types show the
-# real error shape (FastAPI would otherwise advertise its default 422 schema).
-ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
-    status.HTTP_404_NOT_FOUND: {"model": ErrorResponse, "description": "Not found"},
-    status.HTTP_422_UNPROCESSABLE_CONTENT: {
-        "model": ErrorResponse,
-        "description": "Validation error",
-    },
+_ERROR_DESCRIPTIONS = {
+    status.HTTP_400_BAD_REQUEST: "Malformed request (e.g. invalid JSON)",
+    status.HTTP_404_NOT_FOUND: "Resource not found",
+    status.HTTP_422_UNPROCESSABLE_CONTENT: "Validation error",
 }
+
+
+def error_responses(*status_codes: int) -> dict[int | str, dict[str, Any]]:
+    """OpenAPI `responses` for a route, so docs and generated client types show the real
+    error shape. Declaring 422 also replaces FastAPI's default 422 schema."""
+    return {
+        code: {"model": ErrorResponse, "description": _ERROR_DESCRIPTIONS[code]}
+        for code in status_codes
+    }
 
 
 def _error_response(

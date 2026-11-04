@@ -4,7 +4,7 @@ from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import RequestLoggingMiddleware
-from app.routers import health
+from app.routers import health, patients
 
 
 def create_app() -> FastAPI:
@@ -15,6 +15,7 @@ def create_app() -> FastAPI:
     app.add_middleware(RequestLoggingMiddleware)
     register_exception_handlers(app)
     app.include_router(health.router)
+    app.include_router(patients.router)
     return app
 
 
