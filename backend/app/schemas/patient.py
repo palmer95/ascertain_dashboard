@@ -6,6 +6,7 @@ already in the database is never re-validated (and can't 500) on the way out.
 
 import re
 from datetime import date, datetime
+from enum import StrEnum
 from typing import Annotated
 from uuid import UUID
 
@@ -178,3 +179,39 @@ class PatientRead(BaseModel):
     def age(self) -> int:
         """Derived from date_of_birth on every read; never stored, so it can't go stale."""
         return age_on(self.date_of_birth, date.today())
+
+
+class PatientSort(StrEnum):
+    NAME = "name"
+    AGE = "age"
+    LAST_VISIT = "last_visit_at"
+    STATUS = "status"
+
+
+class SortOrder(StrEnum):
+    ASC = "asc"
+    DESC = "desc"
+
+
+class PatientListParams(BaseModel):
+    """Query parameters for `GET /patients`."""
+
+    q: Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)] | None = Field(
+        default=None,
+        description=(
+            "Case-insensitive name search. Every word must match the first or last name, "
+            'so "jane doe" and "doe, jane" both work.'
+        ),
+    )
+    status: PatientStatus | None = None
+    sort: PatientSort = PatientSort.NAME
+    order: SortOrder = SortOrder.ASC
+    limit: int = Field(default=20, ge=1, le=100)
+    offset: int = Field(default=0, ge=0)
+
+
+class PatientPage(BaseModel):
+    items: list[PatientRead]
+    total: int = Field(description="Matching patients across all pages.")
+    limit: int
+    offset: int

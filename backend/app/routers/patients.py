@@ -1,11 +1,33 @@
-from fastapi import APIRouter, Request, Response, status
+from typing import Annotated
+
+from fastapi import APIRouter, Query, Request, Response, status
 
 from app.core.errors import error_responses
 from app.dependencies import PatientDep, SessionDep
-from app.schemas.patient import PatientCreate, PatientRead, PatientUpdate
+from app.schemas.patient import (
+    PatientCreate,
+    PatientListParams,
+    PatientPage,
+    PatientRead,
+    PatientUpdate,
+)
 from app.services import patients as patients_service
 
 router = APIRouter(prefix="/patients", tags=["patients"])
+
+
+@router.get("", summary="List patients", responses=error_responses(422))
+async def list_patients(
+    params: Annotated[PatientListParams, Query()], session: SessionDep
+) -> PatientPage:
+    """Paginated, server-side search, filter and sort, so the client only ever loads one page."""
+    patients, total = await patients_service.list_patients(session, params)
+    return PatientPage(
+        items=[PatientRead.model_validate(p) for p in patients],
+        total=total,
+        limit=params.limit,
+        offset=params.offset,
+    )
 
 
 @router.post(
