@@ -13,6 +13,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.middleware import REQUEST_ID_HEADER
 from app.schemas.errors import ErrorBody, ErrorDetail, ErrorResponse
 
 # Where a validation error originated; stripped so `field` is just the field path.
@@ -98,10 +99,14 @@ async def validation_exception_handler(request: Request, exc: Exception) -> JSON
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     # Never leak internals to the client. Starlette re-raises the exception after this
     # handler runs, so the server logs the traceback once; logging here would duplicate it.
+    # This response bypasses the logging middleware's send wrapper, so the request ID
+    # header (the one thing a user can quote to support) is added here explicitly.
+    request_id = getattr(request.state, "request_id", None)
     return _error_response(
         status.HTTP_500_INTERNAL_SERVER_ERROR,
         "internal_error",
         "An unexpected error occurred",
+        headers={REQUEST_ID_HEADER: request_id} if request_id else None,
     )
 
 
