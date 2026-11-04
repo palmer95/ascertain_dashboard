@@ -67,6 +67,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/dashboard/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard statistics
+         * @description Patient counts by status and recent visit activity, for the dashboard home page.
+         */
+        get: operations["get_dashboard_stats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -76,6 +96,26 @@ export interface components {
          * @enum {string}
          */
         BloodType: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+        /** DashboardStats */
+        DashboardStats: {
+            /** Total Patients */
+            total_patients: number;
+            /**
+             * By Status
+             * @description Every status in a fixed order, including those with zero patients.
+             */
+            by_status: components["schemas"]["StatusCount"][];
+            /**
+             * Visits Last 30 Days
+             * @description Patients whose most recent visit was in the last 30 days.
+             */
+            visits_last_30_days: number;
+            /**
+             * Recent Visits
+             * @description The most recently seen patients.
+             */
+            recent_visits: components["schemas"]["RecentVisit"][];
+        };
         /** ErrorBody */
         ErrorBody: {
             /**
@@ -307,10 +347,37 @@ export interface components {
             conditions?: string[];
         };
         /**
+         * RecentVisit
+         * @description Just enough to list and link to the patient; the full record is one click away.
+         */
+        RecentVisit: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** First Name */
+            first_name: string;
+            /** Last Name */
+            last_name: string;
+            status: components["schemas"]["PatientStatus"];
+            /**
+             * Last Visit At
+             * Format: date-time
+             */
+            last_visit_at: string;
+        };
+        /**
          * SortOrder
          * @enum {string}
          */
         SortOrder: "asc" | "desc";
+        /** StatusCount */
+        StatusCount: {
+            status: components["schemas"]["PatientStatus"];
+            /** Count */
+            count: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -319,6 +386,7 @@ export interface components {
     pathItems: never;
 }
 export type BloodType = components['schemas']['BloodType'];
+export type DashboardStats = components['schemas']['DashboardStats'];
 export type ErrorBody = components['schemas']['ErrorBody'];
 export type ErrorDetail = components['schemas']['ErrorDetail'];
 export type ErrorResponse = components['schemas']['ErrorResponse'];
@@ -329,7 +397,9 @@ export type PatientRead = components['schemas']['PatientRead'];
 export type PatientSort = components['schemas']['PatientSort'];
 export type PatientStatus = components['schemas']['PatientStatus'];
 export type PatientUpdate = components['schemas']['PatientUpdate'];
+export type RecentVisit = components['schemas']['RecentVisit'];
 export type SortOrder = components['schemas']['SortOrder'];
+export type StatusCount = components['schemas']['StatusCount'];
 export type $defs = Record<string, never>;
 export interface operations {
     health: {
@@ -558,6 +628,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_dashboard_stats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardStats"];
                 };
             };
         };

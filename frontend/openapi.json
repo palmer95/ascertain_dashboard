@@ -354,6 +354,28 @@
           }
         }
       }
+    },
+    "/dashboard/stats": {
+      "get": {
+        "tags": [
+          "dashboard"
+        ],
+        "summary": "Dashboard statistics",
+        "description": "Patient counts by status and recent visit activity, for the dashboard home page.",
+        "operationId": "get_dashboard_stats",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardStats"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -371,6 +393,43 @@
           "O-"
         ],
         "title": "BloodType"
+      },
+      "DashboardStats": {
+        "properties": {
+          "total_patients": {
+            "type": "integer",
+            "title": "Total Patients"
+          },
+          "by_status": {
+            "items": {
+              "$ref": "#/components/schemas/StatusCount"
+            },
+            "type": "array",
+            "title": "By Status",
+            "description": "Every status in a fixed order, including those with zero patients."
+          },
+          "visits_last_30_days": {
+            "type": "integer",
+            "title": "Visits Last 30 Days",
+            "description": "Patients whose most recent visit was in the last 30 days."
+          },
+          "recent_visits": {
+            "items": {
+              "$ref": "#/components/schemas/RecentVisit"
+            },
+            "type": "array",
+            "title": "Recent Visits",
+            "description": "The most recently seen patients."
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_patients",
+          "by_status",
+          "visits_last_30_days",
+          "recent_visits"
+        ],
+        "title": "DashboardStats"
       },
       "ErrorBody": {
         "properties": {
@@ -905,6 +964,41 @@
         "title": "PatientUpdate",
         "description": "Body for `PUT /patients/{id}`: a full replacement, so every required field is sent."
       },
+      "RecentVisit": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "first_name": {
+            "type": "string",
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PatientStatus"
+          },
+          "last_visit_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last Visit At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "status",
+          "last_visit_at"
+        ],
+        "title": "RecentVisit",
+        "description": "Just enough to list and link to the patient; the full record is one click away."
+      },
       "SortOrder": {
         "type": "string",
         "enum": [
@@ -912,6 +1006,23 @@
           "desc"
         ],
         "title": "SortOrder"
+      },
+      "StatusCount": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/PatientStatus"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "count"
+        ],
+        "title": "StatusCount"
       }
     }
   }
