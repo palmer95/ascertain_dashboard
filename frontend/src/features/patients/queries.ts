@@ -12,8 +12,15 @@ export const patientKeys = {
   list: (query: object) => [...patientKeys.lists(), query] as const,
 }
 
-export function patientListQuery({ page }: PatientListParams) {
-  const query = { limit: PAGE_SIZE, offset: (page - 1) * PAGE_SIZE }
+export function patientListQuery({ q, status, sort, order, page }: PatientListParams) {
+  const query = {
+    q: q || undefined,
+    status,
+    sort,
+    order,
+    limit: PAGE_SIZE,
+    offset: (page - 1) * PAGE_SIZE,
+  }
   return queryOptions({
     queryKey: patientKeys.list(query),
     // The signal cancels the request when its key is superseded or the page unmounts.

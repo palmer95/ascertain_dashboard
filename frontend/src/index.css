@@ -126,5 +126,7 @@
   }
   html {
     @apply font-sans;
+    /* Reserve the scrollbar's space so short and long result lists don't shift the layout. */
+    scrollbar-gutter: stable;
   }
 }
