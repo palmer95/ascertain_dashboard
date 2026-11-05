@@ -1171,9 +1171,7 @@
             "title": "Conditions"
           },
           "narrative": {
-            "type": "string",
-            "title": "Narrative",
-            "description": "Prose summary of the patient's clinical notes."
+            "$ref": "#/components/schemas/SummaryNarrative"
           },
           "source": {
             "$ref": "#/components/schemas/SummarySource",
@@ -1390,6 +1388,40 @@
           "count"
         ],
         "title": "StatusCount"
+      },
+      "SummaryNarrative": {
+        "properties": {
+          "overview": {
+            "type": "string",
+            "title": "Overview",
+            "description": "One or two sentences on the patient's current clinical picture."
+          },
+          "recent_changes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recent Changes",
+            "description": "Notable developments from the notes, most recent first: symptoms, findings, results, medication changes. Each item one short sentence."
+          },
+          "plan": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Plan",
+            "description": "The current plan and follow-ups the notes mention. Each item one short sentence. Empty if the notes give none."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "overview",
+          "recent_changes",
+          "plan"
+        ],
+        "title": "SummaryNarrative",
+        "description": "The patient's clinical course from their notes, in short sections a clinician can scan."
       },
       "SummarySource": {
         "type": "string",

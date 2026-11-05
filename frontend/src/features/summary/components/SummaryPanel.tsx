@@ -10,7 +10,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { usePatientSummary } from '../queries'
 
 /**
- * The narrative part of the patient summary. Its facts (name, age, blood type, allergies,
+ * The narrative part of the patient summary: an overview, then recent changes and the plan
+ * as short lists, so the chart can be scanned rather than read. Its facts (name, age, blood type, allergies,
  * conditions) are already on this page, read from the same record, so they aren't repeated.
  * Model-written text is labelled as such, because a clinician should check it against the
  * notes before relying on it.
@@ -44,7 +45,14 @@ export function SummaryPanel({ patientId }: { patientId: string }) {
         <CardContent aria-busy={isFetching} className="flex flex-col gap-3">
           {summary ? (
             <>
-              <p className="leading-relaxed">{summary.narrative}</p>
+              <p className="leading-relaxed">{summary.narrative.overview}</p>
+              {(summary.narrative.recent_changes.length > 0 ||
+                summary.narrative.plan.length > 0) && (
+                <div className="grid gap-4 md:auto-cols-fr md:grid-flow-col">
+                  <NarrativeList title="Recent changes" items={summary.narrative.recent_changes} />
+                  <NarrativeList title="Plan" items={summary.narrative.plan} />
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 {isFetching ? 'Updating…' : sourceNote(summary.source, summary.note_count)}
               </p>
@@ -65,6 +73,21 @@ export function SummaryPanel({ patientId }: { patientId: string }) {
         </CardContent>
       </Card>
     </section>
+  )
+}
+
+function NarrativeList({ title, items }: { title: string; items: string[] }) {
+  if (items.length === 0) return null
+  return (
+    <div className="flex flex-col gap-1.5">
+      <h3 className="text-xs font-medium text-muted-foreground">{title}</h3>
+      <ul className="flex list-disc flex-col gap-1 pl-4 marker:text-muted-foreground">
+        {items.map((item, index) => (
+          // Items are plain strings that can repeat, and the list is replaced, never reordered.
+          <li key={index}>{item}</li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

@@ -414,11 +414,7 @@ export interface components {
             allergies: string[];
             /** Conditions */
             conditions: string[];
-            /**
-             * Narrative
-             * @description Prose summary of the patient's clinical notes.
-             */
-            narrative: string;
+            narrative: components["schemas"]["SummaryNarrative"];
             /** @description `llm` if Claude wrote the narrative, `template` if it was generated locally (no API key configured, no notes, or the model call failed or timed out). */
             source: components["schemas"]["SummarySource"];
             /** Note Count */
@@ -513,6 +509,27 @@ export interface components {
             count: number;
         };
         /**
+         * SummaryNarrative
+         * @description The patient's clinical course from their notes, in short sections a clinician can scan.
+         */
+        SummaryNarrative: {
+            /**
+             * Overview
+             * @description One or two sentences on the patient's current clinical picture.
+             */
+            overview: string;
+            /**
+             * Recent Changes
+             * @description Notable developments from the notes, most recent first: symptoms, findings, results, medication changes. Each item one short sentence.
+             */
+            recent_changes: string[];
+            /**
+             * Plan
+             * @description The current plan and follow-ups the notes mention. Each item one short sentence. Empty if the notes give none.
+             */
+            plan: string[];
+        };
+        /**
          * SummarySource
          * @enum {string}
          */
@@ -542,6 +559,7 @@ export type PatientUpdate = components['schemas']['PatientUpdate'];
 export type RecentVisit = components['schemas']['RecentVisit'];
 export type SortOrder = components['schemas']['SortOrder'];
 export type StatusCount = components['schemas']['StatusCount'];
+export type SummaryNarrative = components['schemas']['SummaryNarrative'];
 export type SummarySource = components['schemas']['SummarySource'];
 export type $defs = Record<string, never>;
 export interface operations {
