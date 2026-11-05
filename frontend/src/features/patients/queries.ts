@@ -2,13 +2,16 @@ import { useEffect } from 'react'
 import {
   keepPreviousData,
   queryOptions,
+  useMutation,
   useQuery,
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query'
 
 import { api, unwrap } from '@/api/client'
-import type { PatientPage } from '@/api/schema'
+import { ApiError } from '@/api/errors'
+import type { PatientCreate, PatientPage, PatientRead, PatientUpdate } from '@/api/schema'
+import { dashboardKeys } from '@/features/dashboard/queries'
 
 import { PAGE_SIZE, type PatientListParams } from './list-params'
 
@@ -87,5 +90,52 @@ export function usePatient(id: string, { enabled = true } = {}) {
     ...patientDetailQuery(id),
     enabled,
     placeholderData: () => findInCachedLists(queryClient, id),
+  })
+}
+
+/** Lists and dashboard counts show every patient, so any create, edit or delete refreshes them. */
+function invalidateOverviews(queryClient: QueryClient) {
+  void queryClient.invalidateQueries({ queryKey: patientKeys.lists() })
+  void queryClient.invalidateQueries({ queryKey: dashboardKeys.stats })
+}
+
+export function useCreatePatient() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: PatientCreate) => unwrap(api.POST('/patients', { body })),
+    onSuccess: (patient) => {
+      // The detail page opens next; seed it so it renders without another request.
+      queryClient.setQueryData(patientKeys.detail(patient.id), patient)
+      invalidateOverviews(queryClient)
+    },
+  })
+}
+
+export function useUpdatePatient(id: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: PatientUpdate) =>
+      unwrap(api.PUT('/patients/{patient_id}', { params: { path: { patient_id: id } }, body })),
+    onSuccess: (patient: PatientRead) => {
+      queryClient.setQueryData(patientKeys.detail(id), patient)
+      // Also refetches what's nested under the patient: the summary repeats its facts.
+      void queryClient.invalidateQueries({ queryKey: patientKeys.detail(id) })
+      invalidateOverviews(queryClient)
+    },
+  })
+}
+
+export function useDeletePatient() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await unwrap(api.DELETE('/patients/{patient_id}', { params: { path: { patient_id: id } } }))
+      } catch (error) {
+        // Already gone (e.g. deleted in another tab): the outcome the user wanted.
+        if (!(error instanceof ApiError && error.isNotFound)) throw error
+      }
+    },
+    onSuccess: () => invalidateOverviews(queryClient),
   })
 }

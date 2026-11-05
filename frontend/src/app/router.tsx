@@ -36,9 +36,23 @@ export const router = createBrowserRouter([
             children: [
               { index: true, lazy: lazyPage(() => import('@/pages/PatientsPage')) },
               {
+                // A static segment, so it wins over `:patientId`.
+                path: 'new',
+                handle: { crumb: 'New patient' } satisfies RouteHandle,
+                lazy: lazyPage(() => import('@/pages/PatientCreatePage')),
+              },
+              {
+                // Parent route so the edit page gets a "Patient details ›" breadcrumb.
                 path: ':patientId',
                 handle: { crumb: 'Patient details' } satisfies RouteHandle,
-                lazy: lazyPage(() => import('@/pages/PatientDetailPage')),
+                children: [
+                  { index: true, lazy: lazyPage(() => import('@/pages/PatientDetailPage')) },
+                  {
+                    path: 'edit',
+                    handle: { crumb: 'Edit' } satisfies RouteHandle,
+                    lazy: lazyPage(() => import('@/pages/PatientEditPage')),
+                  },
+                ],
               },
             ],
           },

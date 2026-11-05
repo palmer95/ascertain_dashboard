@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { z } from 'zod'
 
@@ -6,6 +7,7 @@ import { ErrorState } from '@/components/ErrorState'
 import { MessageState } from '@/components/MessageState'
 import { Button } from '@/components/ui/button'
 import { NotesSection } from '@/features/notes/components/NotesSection'
+import { DeletePatientDialog } from '@/features/patients/components/DeletePatientDialog'
 import {
   PatientProfile,
   PatientProfileSkeleton,
@@ -45,7 +47,27 @@ export default function PatientDetailPage() {
   // The summary and notes load alongside the profile rather than after it.
   return (
     <div className="flex flex-col gap-6">
-      {patient ? <PatientProfile patient={patient} /> : <PatientProfileSkeleton />}
+      {patient ? (
+        <PatientProfile
+          patient={patient}
+          actions={
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link to={`/patients/${patient.id}/edit`} />}
+                nativeButton={false}
+              >
+                <Pencil aria-hidden data-icon="inline-start" />
+                Edit
+              </Button>
+              <DeletePatientDialog patient={patient} />
+            </>
+          }
+        />
+      ) : (
+        <PatientProfileSkeleton />
+      )}
       <SummaryPanel patientId={patientId} />
       <NotesSection patientId={patientId} />
       {patient && <PatientRecordMeta patient={patient} />}

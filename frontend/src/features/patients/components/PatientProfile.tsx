@@ -8,21 +8,31 @@ import { formatCalendarDate, formatDate, formatFullName } from '@/lib/format'
 
 import { PatientStatusBadge } from './PatientStatusBadge'
 
-export function PatientProfile({ patient }: { patient: PatientRead }) {
+export function PatientProfile({
+  patient,
+  actions,
+}: {
+  patient: PatientRead
+  /** Buttons for the header, e.g. Edit and Delete. */
+  actions?: ReactNode
+}) {
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h1 className="text-2xl font-semibold">{formatFullName(patient)}</h1>
-          <PatientStatusBadge status={patient.status} />
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-2xl font-semibold">{formatFullName(patient)}</h1>
+            <PatientStatusBadge status={patient.status} />
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Age <span className="tabular-nums">{patient.age}</span> · Born{' '}
+            {formatCalendarDate(patient.date_of_birth)} ·{' '}
+            {patient.last_visit_at
+              ? `Last visit ${formatDate(patient.last_visit_at)}`
+              : 'No visits yet'}
+          </p>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Age <span className="tabular-nums">{patient.age}</span> · Born{' '}
-          {formatCalendarDate(patient.date_of_birth)} ·{' '}
-          {patient.last_visit_at
-            ? `Last visit ${formatDate(patient.last_visit_at)}`
-            : 'No visits yet'}
-        </p>
+        {actions && <div className="flex shrink-0 gap-2">{actions}</div>}
       </header>
 
       <div className="grid gap-4 md:grid-cols-2">

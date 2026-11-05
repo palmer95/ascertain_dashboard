@@ -1,4 +1,6 @@
 import { useEffect } from 'react'
+import { Plus } from 'lucide-react'
+import { Link } from 'react-router'
 
 import { ErrorState } from '@/components/ErrorState'
 import { PaginationBar } from '@/components/PaginationBar'
@@ -38,14 +40,20 @@ export default function PatientsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">Patients</h1>
-        {/* Live region: announces the new count after a search or filter. */}
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          {data
-            ? `${data.total} ${data.total === 1 ? 'patient' : 'patients'}${isFiltered ? ' found' : ''}`
-            : !error && 'Loading patients…'}
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold">Patients</h1>
+          {/* Live region: announces the new count after a search or filter. */}
+          <p className="text-sm text-muted-foreground" aria-live="polite">
+            {data
+              ? `${data.total} ${data.total === 1 ? 'patient' : 'patients'}${isFiltered ? ' found' : ''}`
+              : !error && 'Loading patients…'}
+          </p>
+        </div>
+        <Button render={<Link to="/patients/new" />} nativeButton={false}>
+          <Plus aria-hidden data-icon="inline-start" />
+          New patient
+        </Button>
       </header>
 
       {/* Phones: search on its own row, the two menus side by side beneath it. */}
