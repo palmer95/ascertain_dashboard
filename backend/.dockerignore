@@ -1,0 +1,9 @@
+# Only the app, migrations and lockfile go into the image.
+.venv
+.mypy_cache
+.ruff_cache
+**/__pycache__
+.env
+.env.*
+Dockerfile
+.dockerignore
