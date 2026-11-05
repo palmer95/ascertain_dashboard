@@ -72,12 +72,17 @@ export function PatientProfile({ patient }: { patient: PatientRead }) {
           </Field>
         </Section>
       </div>
-
-      <p className="text-xs text-muted-foreground">
-        Record created {formatDate(patient.created_at)} · Last updated{' '}
-        {formatDate(patient.updated_at)}
-      </p>
     </div>
+  )
+}
+
+/** Record housekeeping, for the foot of the page. */
+export function PatientRecordMeta({ patient }: { patient: PatientRead }) {
+  return (
+    <p className="text-xs text-muted-foreground">
+      Record created {formatDate(patient.created_at)} · Last updated{' '}
+      {formatDate(patient.updated_at)}
+    </p>
   )
 }
 

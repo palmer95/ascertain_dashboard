@@ -5,11 +5,14 @@ import { ApiError } from '@/api/errors'
 import { ErrorState } from '@/components/ErrorState'
 import { MessageState } from '@/components/MessageState'
 import { Button } from '@/components/ui/button'
+import { NotesSection } from '@/features/notes/components/NotesSection'
 import {
   PatientProfile,
   PatientProfileSkeleton,
+  PatientRecordMeta,
 } from '@/features/patients/components/PatientProfile'
 import { usePatient } from '@/features/patients/queries'
+import { SummaryPanel } from '@/features/summary/components/SummaryPanel'
 
 // Any 8-4-4-4-12 hex ID. A malformed one can't exist, so it's "not found" without a request
 // (the API would answer 422 for it).
@@ -33,11 +36,19 @@ export default function PatientDetailPage() {
       />
     )
   }
-  if (patient) return <PatientProfile patient={patient} />
-  if (error) {
+  if (error && !patient) {
     return (
       <ErrorState title="Couldn't load this patient" error={error} onRetry={() => void refetch()} />
     )
   }
-  return <PatientProfileSkeleton />
+
+  // The summary and notes load alongside the profile rather than after it.
+  return (
+    <div className="flex flex-col gap-6">
+      {patient ? <PatientProfile patient={patient} /> : <PatientProfileSkeleton />}
+      <SummaryPanel patientId={patientId} />
+      <NotesSection patientId={patientId} />
+      {patient && <PatientRecordMeta patient={patient} />}
+    </div>
+  )
 }

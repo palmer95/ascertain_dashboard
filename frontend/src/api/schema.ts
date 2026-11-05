@@ -67,6 +67,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/patients/{patient_id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List a patient's notes
+         * @description Newest first, by the note's clinical time (`taken_at`).
+         */
+        get: operations["list_notes"];
+        put?: never;
+        /** Add a note */
+        post: operations["create_note"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/patients/{patient_id}/notes/{note_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete a note
+         * @description 404 if the note doesn't exist or belongs to a different patient.
+         */
+        delete: operations["delete_note"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/patients/{patient_id}/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a patient summary
+         * @description Key facts from the record plus a narrative of the clinical notes.
+         *
+         *     The narrative is written by Claude when `ANTHROPIC_API_KEY` is set, and by a template
+         *     otherwise (or if the model call fails); `source` says which.
+         */
+        get: operations["get_patient_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/dashboard/stats": {
         parameters: {
             query?: never;
@@ -164,6 +228,42 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** NoteCreate */
+        NoteCreate: {
+            /**
+             * Taken At
+             * Format: date-time
+             * @description When the note was taken (clinical time), with a timezone offset.
+             */
+            taken_at: string;
+            /** Content */
+            content: string;
+        };
+        /** NoteRead */
+        NoteRead: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /**
+             * Taken At
+             * Format: date-time
+             */
+            taken_at: string;
+            /** Content */
+            content: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
         };
         /**
          * PatientCreate
@@ -296,6 +396,40 @@ export interface components {
          */
         PatientStatus: "active" | "inactive" | "pending" | "discharged";
         /**
+         * PatientSummary
+         * @description Facts come straight from the database; only `narrative` may be model-written.
+         */
+        PatientSummary: {
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /** Name */
+            name: string;
+            /** Age */
+            age: number;
+            blood_type: components["schemas"]["BloodType"];
+            /** Allergies */
+            allergies: string[];
+            /** Conditions */
+            conditions: string[];
+            /**
+             * Narrative
+             * @description Prose summary of the patient's clinical notes.
+             */
+            narrative: string;
+            /** @description `llm` if Claude wrote the narrative, `template` if it was generated locally (no API key configured, no notes, or the model call failed or timed out). */
+            source: components["schemas"]["SummarySource"];
+            /** Note Count */
+            note_count: number;
+            /**
+             * Generated At
+             * Format: date-time
+             */
+            generated_at: string;
+        };
+        /**
          * PatientUpdate
          * @description Body for `PUT /patients/{id}`: a full replacement, so every required field is sent.
          */
@@ -378,6 +512,11 @@ export interface components {
             /** Count */
             count: number;
         };
+        /**
+         * SummarySource
+         * @enum {string}
+         */
+        SummarySource: "llm" | "template";
     };
     responses: never;
     parameters: never;
@@ -391,15 +530,19 @@ export type ErrorBody = components['schemas']['ErrorBody'];
 export type ErrorDetail = components['schemas']['ErrorDetail'];
 export type ErrorResponse = components['schemas']['ErrorResponse'];
 export type HealthResponse = components['schemas']['HealthResponse'];
+export type NoteCreate = components['schemas']['NoteCreate'];
+export type NoteRead = components['schemas']['NoteRead'];
 export type PatientCreate = components['schemas']['PatientCreate'];
 export type PatientPage = components['schemas']['PatientPage'];
 export type PatientRead = components['schemas']['PatientRead'];
 export type PatientSort = components['schemas']['PatientSort'];
 export type PatientStatus = components['schemas']['PatientStatus'];
+export type PatientSummary = components['schemas']['PatientSummary'];
 export type PatientUpdate = components['schemas']['PatientUpdate'];
 export type RecentVisit = components['schemas']['RecentVisit'];
 export type SortOrder = components['schemas']['SortOrder'];
 export type StatusCount = components['schemas']['StatusCount'];
+export type SummarySource = components['schemas']['SummarySource'];
 export type $defs = Record<string, never>;
 export interface operations {
     health: {
@@ -632,6 +775,178 @@ export interface operations {
             };
         };
     };
+    list_notes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteRead"][];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteRead"];
+                };
+            };
+            /** @description Malformed request (e.g. invalid JSON) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_note: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                note_id: string;
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_patient_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PatientSummary"];
+                };
+            };
+            /** @description Resource not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_dashboard_stats: {
         parameters: {
             query?: never;
@@ -665,3 +980,4 @@ export const bloodTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["s
 export const patientSortValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PatientSort"]> = ["name", "age", "last_visit_at", "status"];
 export const patientStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PatientStatus"]> = ["active", "inactive", "pending", "discharged"];
 export const sortOrderValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SortOrder"]> = ["asc", "desc"];
+export const summarySourceValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SummarySource"]> = ["llm", "template"];

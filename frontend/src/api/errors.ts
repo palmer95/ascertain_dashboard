@@ -79,3 +79,13 @@ function fallbackMessage(status: number): string {
   if (status >= 500) return 'The server is having trouble right now. Please try again shortly.'
   return `Request failed (${status}).`
 }
+
+/** A message that's safe to show the user for any thrown value. */
+export function describeError(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.isNetworkError
+      ? "Couldn't reach the server. Check your connection and try again."
+      : error.message
+  }
+  return 'Something went wrong. Please try again.'
+}

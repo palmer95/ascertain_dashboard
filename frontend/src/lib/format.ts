@@ -26,3 +26,25 @@ export function formatFullName(person: { first_name: string; last_name: string }
 export function formatNameLastFirst(person: { first_name: string; last_name: string }) {
   return `${person.last_name}, ${person.first_name}`
 }
+
+const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+})
+
+/** A timestamp with its time, in the user's locale and time zone, e.g. "Mar 3, 2026, 2:15 PM". */
+export function formatDateTime(isoTimestamp: string) {
+  return dateTimeFormatter.format(new Date(isoTimestamp))
+}
+
+/**
+ * A Date as the local "YYYY-MM-DDTHH:mm" string a `datetime-local` input expects.
+ * (`toISOString()` would give UTC, i.e. the wrong wall-clock time.)
+ */
+export function toDateTimeLocalValue(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  )
+}

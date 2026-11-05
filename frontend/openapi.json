@@ -355,6 +355,246 @@
         }
       }
     },
+    "/patients/{patient_id}/notes": {
+      "get": {
+        "tags": [
+          "notes"
+        ],
+        "summary": "List a patient's notes",
+        "description": "Newest first, by the note's clinical time (`taken_at`).",
+        "operationId": "list_notes",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NoteRead"
+                  },
+                  "title": "Response List Notes"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "notes"
+        ],
+        "summary": "Add a note",
+        "operationId": "create_note",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteRead"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request (e.g. invalid JSON)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/notes/{note_id}": {
+      "delete": {
+        "tags": [
+          "notes"
+        ],
+        "summary": "Delete a note",
+        "description": "404 if the note doesn't exist or belongs to a different patient.",
+        "operationId": "delete_note",
+        "parameters": [
+          {
+            "name": "note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Note Id"
+            }
+          },
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/patients/{patient_id}/summary": {
+      "get": {
+        "tags": [
+          "summary"
+        ],
+        "summary": "Get a patient summary",
+        "description": "Key facts from the record plus a narrative of the clinical notes.\n\nThe narrative is written by Claude when `ANTHROPIC_API_KEY` is set, and by a template\notherwise (or if the model call fails); `source` says which.",
+        "operationId": "get_patient_summary",
+        "parameters": [
+          {
+            "name": "patient_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Patient Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSummary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/dashboard/stats": {
       "get": {
         "tags": [
@@ -523,6 +763,66 @@
           "status"
         ],
         "title": "HealthResponse"
+      },
+      "NoteCreate": {
+        "properties": {
+          "taken_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Taken At",
+            "description": "When the note was taken (clinical time), with a timezone offset."
+          },
+          "content": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Content"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "taken_at",
+          "content"
+        ],
+        "title": "NoteCreate"
+      },
+      "NoteRead": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "patient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Patient Id"
+          },
+          "taken_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Taken At"
+          },
+          "content": {
+            "type": "string",
+            "title": "Content"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "patient_id",
+          "taken_at",
+          "content",
+          "created_at"
+        ],
+        "title": "NoteRead"
       },
       "PatientCreate": {
         "properties": {
@@ -838,6 +1138,73 @@
         "title": "PatientStatus",
         "description": "Administrative status. Clinical acuity is intentionally a separate concept."
       },
+      "PatientSummary": {
+        "properties": {
+          "patient_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Patient Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "age": {
+            "type": "integer",
+            "title": "Age"
+          },
+          "blood_type": {
+            "$ref": "#/components/schemas/BloodType"
+          },
+          "allergies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Allergies"
+          },
+          "conditions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Conditions"
+          },
+          "narrative": {
+            "type": "string",
+            "title": "Narrative",
+            "description": "Prose summary of the patient's clinical notes."
+          },
+          "source": {
+            "$ref": "#/components/schemas/SummarySource",
+            "description": "`llm` if Claude wrote the narrative, `template` if it was generated locally (no API key configured, no notes, or the model call failed or timed out)."
+          },
+          "note_count": {
+            "type": "integer",
+            "title": "Note Count"
+          },
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Generated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "patient_id",
+          "name",
+          "age",
+          "blood_type",
+          "allergies",
+          "conditions",
+          "narrative",
+          "source",
+          "note_count",
+          "generated_at"
+        ],
+        "title": "PatientSummary",
+        "description": "Facts come straight from the database; only `narrative` may be model-written."
+      },
       "PatientUpdate": {
         "properties": {
           "first_name": {
@@ -1023,6 +1390,14 @@
           "count"
         ],
         "title": "StatusCount"
+      },
+      "SummarySource": {
+        "type": "string",
+        "enum": [
+          "llm",
+          "template"
+        ],
+        "title": "SummarySource"
       }
     }
   }
