@@ -60,16 +60,140 @@
             "in": "query",
             "required": false,
             "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/PatientStatus"
+              },
+              "maxItems": 4,
+              "default": [],
+              "title": "Status"
+            }
+          },
+          {
+            "name": "blood_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/BloodType"
+              },
+              "maxItems": 8,
+              "default": [],
+              "title": "Blood Type"
+            }
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 62,
+              "description": "2-letter US state codes.",
+              "default": [],
+              "title": "State"
+            },
+            "description": "2-letter US state codes."
+          },
+          {
+            "name": "min_age",
+            "in": "query",
+            "required": false,
+            "schema": {
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/PatientStatus"
+                  "type": "integer",
+                  "maximum": 130,
+                  "minimum": 0
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Status"
-            }
+              "description": "Age in years.",
+              "title": "Min Age"
+            },
+            "description": "Age in years."
+          },
+          {
+            "name": "max_age",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "maximum": 130,
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Age in years, inclusive. Set both to the same value for an exact age.",
+              "title": "Max Age"
+            },
+            "description": "Age in years, inclusive. Set both to the same value for an exact age."
+          },
+          {
+            "name": "condition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive text in any of the patient's conditions, e.g. \"diabetes\".",
+              "title": "Condition"
+            },
+            "description": "Case-insensitive text in any of the patient's conditions, e.g. \"diabetes\"."
+          },
+          {
+            "name": "allergy",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive text in any of the patient's allergies, e.g. \"penicillin\".",
+              "title": "Allergy"
+            },
+            "description": "Case-insensitive text in any of the patient's allergies, e.g. \"penicillin\"."
+          },
+          {
+            "name": "last_visit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LastVisit"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "When the patient was last seen. A year is 365 days.",
+              "title": "Last Visit"
+            },
+            "description": "When the patient was last seen. A year is 365 days."
           },
           {
             "name": "sort",
@@ -763,6 +887,18 @@
           "status"
         ],
         "title": "HealthResponse"
+      },
+      "LastVisit": {
+        "type": "string",
+        "enum": [
+          "within_30_days",
+          "within_90_days",
+          "within_1_year",
+          "over_1_year",
+          "never"
+        ],
+        "title": "LastVisit",
+        "description": "Preset ranges for when a patient was last seen."
       },
       "NoteCreate": {
         "properties": {

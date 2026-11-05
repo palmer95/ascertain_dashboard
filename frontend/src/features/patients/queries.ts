@@ -24,12 +24,20 @@ export const patientKeys = {
   detail: (id: string) => [...patientKeys.details(), id] as const,
 }
 
-export function patientListQuery({ q, status, sort, order, page }: PatientListParams) {
+export function patientListQuery({ q, page, ...filters }: PatientListParams) {
+  // Unset filters are left out, so equal lists share a cache entry and requests stay short.
   const query = {
     q: q || undefined,
-    status,
-    sort,
-    order,
+    status: filters.status.length ? filters.status : undefined,
+    blood_type: filters.blood_type.length ? filters.blood_type : undefined,
+    state: filters.state.length ? filters.state : undefined,
+    min_age: filters.min_age,
+    max_age: filters.max_age,
+    condition: filters.condition || undefined,
+    allergy: filters.allergy || undefined,
+    last_visit: filters.last_visit,
+    sort: filters.sort,
+    order: filters.order,
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   }

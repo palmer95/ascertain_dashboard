@@ -18,6 +18,7 @@ from pydantic import (
     EmailStr,
     Field,
     StringConstraints,
+    ValidationInfo,
     computed_field,
     field_validator,
 )
@@ -193,21 +194,67 @@ class SortOrder(StrEnum):
     DESC = "desc"
 
 
-class PatientListParams(BaseModel):
-    """Query parameters for `GET /patients`."""
+class LastVisit(StrEnum):
+    """Preset ranges for when a patient was last seen."""
 
-    q: Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)] | None = Field(
+    WITHIN_30_DAYS = "within_30_days"
+    WITHIN_90_DAYS = "within_90_days"
+    WITHIN_1_YEAR = "within_1_year"
+    OVER_1_YEAR = "over_1_year"
+    NEVER = "never"
+
+
+MAX_AGE = 130
+FilterText = Annotated[str, StringConstraints(strip_whitespace=True, max_length=100)]
+
+
+class PatientListParams(BaseModel):
+    """Query parameters for `GET /patients`. Every filter is optional and they combine with AND;
+    list filters match any of their values (repeat the parameter: `?status=active&status=pending`).
+    """
+
+    q: FilterText | None = Field(
         default=None,
         description=(
             "Case-insensitive name search. Every word must match the first or last name, "
             'so "jane doe" and "doe, jane" both work.'
         ),
     )
-    status: PatientStatus | None = None
+    status: list[PatientStatus] = Field(default=[], max_length=len(PatientStatus))
+    blood_type: list[BloodType] = Field(default=[], max_length=len(BloodType))
+    state: list[StateCode] = Field(
+        default=[], max_length=len(US_STATE_CODES), description="2-letter US state codes."
+    )
+    min_age: int | None = Field(default=None, ge=0, le=MAX_AGE, description="Age in years.")
+    max_age: int | None = Field(
+        default=None,
+        ge=0,
+        le=MAX_AGE,
+        description="Age in years, inclusive. Set both to the same value for an exact age.",
+    )
+    condition: FilterText | None = Field(
+        default=None,
+        description='Case-insensitive text in any of the patient\'s conditions, e.g. "diabetes".',
+    )
+    allergy: FilterText | None = Field(
+        default=None,
+        description='Case-insensitive text in any of the patient\'s allergies, e.g. "penicillin".',
+    )
+    last_visit: LastVisit | None = Field(
+        default=None, description="When the patient was last seen. A year is 365 days."
+    )
     sort: PatientSort = PatientSort.NAME
     order: SortOrder = SortOrder.ASC
     limit: int = Field(default=20, ge=1, le=100)
     offset: int = Field(default=0, ge=0)
+
+    @field_validator("max_age")
+    @classmethod
+    def _check_age_range(cls, max_age: int | None, info: ValidationInfo) -> int | None:
+        min_age = info.data.get("min_age")
+        if max_age is not None and min_age is not None and max_age < min_age:
+            raise ValueError("max_age must be greater than or equal to min_age")
+        return max_age
 
 
 class PatientPage(BaseModel):

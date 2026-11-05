@@ -4,6 +4,7 @@ import type { DashboardStats } from '@/api/schema'
 import { ErrorState } from '@/components/ErrorState'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { StatusChart } from '@/features/dashboard/components/StatusChart'
 import { useDashboardStats } from '@/features/dashboard/queries'
 import { PatientStatusBadge } from '@/features/patients/components/PatientStatusBadge'
 import { PATIENT_STATUS_LABELS } from '@/features/patients/status'
@@ -26,7 +27,10 @@ export default function HomePage() {
       {stats ? (
         <>
           <StatusTiles stats={stats} />
-          <RecentVisits visits={stats.recent_visits} />
+          <div className="grid items-start gap-6 lg:grid-cols-2">
+            <StatusChart stats={stats} />
+            <RecentVisits visits={stats.recent_visits} />
+          </div>
         </>
       ) : error ? (
         <ErrorState
@@ -119,7 +123,10 @@ function DashboardSkeleton() {
           <Skeleton key={index} className="h-28 rounded-xl" />
         ))}
       </div>
-      <Skeleton className="h-72 rounded-xl" />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-60 rounded-xl" />
+        <Skeleton className="h-72 rounded-xl" />
+      </div>
     </div>
   )
 }

@@ -5,11 +5,14 @@ import { Link } from 'react-router'
 import { ErrorState } from '@/components/ErrorState'
 import { PaginationBar } from '@/components/PaginationBar'
 import { Button } from '@/components/ui/button'
-import { SortSelect, StatusFilter } from '@/features/patients/components/PatientFilters'
+import { ActiveFilters } from '@/features/patients/components/ActiveFilters'
+import { SortSelect } from '@/features/patients/components/PatientFilters'
+import { PatientFiltersPanel } from '@/features/patients/components/PatientFiltersPanel'
 import { PatientList, PatientListSkeleton } from '@/features/patients/components/PatientList'
 import { PatientSearch } from '@/features/patients/components/PatientSearch'
 import {
   hasActiveFilters,
+  NO_PANEL_FILTERS,
   PAGE_SIZE,
   usePatientListParams,
   type PatientListParams,
@@ -36,7 +39,7 @@ export default function PatientsPage() {
     setParams({ ...updates, page: 1 }, { replace, preventScrollReset: true })
   }
 
-  const clearFilters = () => refine({ q: '', status: undefined })
+  const clearFilters = () => refine({ q: '', ...NO_PANEL_FILTERS })
 
   return (
     <div className="flex flex-col gap-6">
@@ -56,21 +59,29 @@ export default function PatientsPage() {
         </Button>
       </header>
 
-      {/* Phones: search on its own row, the two menus side by side beneath it. */}
-      <div className="grid grid-cols-2 gap-2 sm:flex">
-        {/* Typing replaces the history entry, so Back doesn't step through every keystroke. */}
-        <PatientSearch
-          value={params.q}
-          onSearch={(q) => refine({ q }, { replace: true })}
-          className="col-span-2 flex-1"
-        />
-        <StatusFilter value={params.status} onChange={(status) => refine({ status })} />
-        <SortSelect
-          sort={params.sort}
-          order={params.order}
-          onChange={(sort, order) => refine({ sort, order })}
-          className="w-full sm:w-44 md:hidden"
-        />
+      {/* Phones: search on its own row, Filters and sort side by side beneath it. */}
+      <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          {/* Typing replaces the history entry, so Back doesn't step through every keystroke. */}
+          <PatientSearch
+            value={params.q}
+            onSearch={(q) => refine({ q }, { replace: true })}
+            className="col-span-2 flex-1"
+          />
+          <PatientFiltersPanel
+            params={params}
+            onChange={refine}
+            total={data?.total}
+            isUpdating={isPlaceholderData}
+          />
+          <SortSelect
+            sort={params.sort}
+            order={params.order}
+            onChange={(sort, order) => refine({ sort, order })}
+            className="w-full sm:w-44 md:hidden"
+          />
+        </div>
+        <ActiveFilters params={params} onChange={refine} onClearAll={clearFilters} />
       </div>
 
       {!data ? (

@@ -229,6 +229,12 @@ export interface components {
              */
             status: "ok";
         };
+        /**
+         * LastVisit
+         * @description Preset ranges for when a patient was last seen.
+         * @enum {string}
+         */
+        LastVisit: "within_30_days" | "within_90_days" | "within_1_year" | "over_1_year" | "never";
         /** NoteCreate */
         NoteCreate: {
             /**
@@ -547,6 +553,7 @@ export type ErrorBody = components['schemas']['ErrorBody'];
 export type ErrorDetail = components['schemas']['ErrorDetail'];
 export type ErrorResponse = components['schemas']['ErrorResponse'];
 export type HealthResponse = components['schemas']['HealthResponse'];
+export type LastVisit = components['schemas']['LastVisit'];
 export type NoteCreate = components['schemas']['NoteCreate'];
 export type NoteRead = components['schemas']['NoteRead'];
 export type PatientCreate = components['schemas']['PatientCreate'];
@@ -588,7 +595,20 @@ export interface operations {
             query?: {
                 /** @description Case-insensitive name search. Every word must match the first or last name, so "jane doe" and "doe, jane" both work. */
                 q?: string | null;
-                status?: components["schemas"]["PatientStatus"] | null;
+                status?: components["schemas"]["PatientStatus"][];
+                blood_type?: components["schemas"]["BloodType"][];
+                /** @description 2-letter US state codes. */
+                state?: string[];
+                /** @description Age in years. */
+                min_age?: number | null;
+                /** @description Age in years, inclusive. Set both to the same value for an exact age. */
+                max_age?: number | null;
+                /** @description Case-insensitive text in any of the patient's conditions, e.g. "diabetes". */
+                condition?: string | null;
+                /** @description Case-insensitive text in any of the patient's allergies, e.g. "penicillin". */
+                allergy?: string | null;
+                /** @description When the patient was last seen. A year is 365 days. */
+                last_visit?: components["schemas"]["LastVisit"] | null;
                 sort?: components["schemas"]["PatientSort"];
                 order?: components["schemas"]["SortOrder"];
                 limit?: number;
@@ -995,6 +1015,7 @@ type ReadonlyArray<T> = [
     unknown[]
 ] ? Readonly<Exclude<T, undefined>> : Readonly<Exclude<T, undefined>[]>;
 export const bloodTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["BloodType"]> = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+export const lastVisitValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["LastVisit"]> = ["within_30_days", "within_90_days", "within_1_year", "over_1_year", "never"];
 export const patientSortValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PatientSort"]> = ["name", "age", "last_visit_at", "status"];
 export const patientStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["PatientStatus"]> = ["active", "inactive", "pending", "discharged"];
 export const sortOrderValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["SortOrder"]> = ["asc", "desc"];
