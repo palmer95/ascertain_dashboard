@@ -1,6 +1,7 @@
 from functools import lru_cache
 from typing import Literal
 
+from pydantic import SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import URL
 
@@ -25,6 +26,18 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: int = 5433
     postgres_db: str = "ascertain"
+
+    # Optional. Without a key, patient summaries use the built-in template narrative.
+    anthropic_api_key: SecretStr | None = None
+    anthropic_model: str = "claude-haiku-5-5"
+    # Short on purpose: past this, the summary falls back to the template rather than hang.
+    summary_timeout_seconds: float = 10.0
+
+    @field_validator("anthropic_api_key", mode="before")
+    @classmethod
+    def _blank_key_is_none(cls, value: object) -> object:
+        # `ANTHROPIC_API_KEY=` (as in .env.example) means "not configured".
+        return None if isinstance(value, str) and not value.strip() else value
 
     @property
     def database_url(self) -> URL:

@@ -5,6 +5,7 @@ description = "FastAPI backend for the healthcare patient dashboard"
 requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.20",
+    "anthropic>=2.5.0",
     "asyncpg>=0.32",
     "faker>=40",
     "fastapi[standard]>=0.162",
