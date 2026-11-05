@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.e2e.tsbuildinfo",
+    // Code passed to page.evaluate() runs in the browser.
+    "lib": ["ES2023", "DOM"],
+    // Playwright compiles the tests itself, so imports resolve like the app's (no extensions).
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["playwright.config.ts", "e2e"]
+}

@@ -29,6 +29,8 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    // Component tests only; e2e/ is Playwright's.
+    include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/test/setup.ts'],
     // Undo `vi.spyOn` and friends after every test.
     restoreMocks: true,

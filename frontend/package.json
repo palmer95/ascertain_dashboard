@@ -16,6 +16,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "gen:api": "uv run --directory ../backend python -m scripts.export_openapi > openapi.json && openapi-typescript openapi.json -o src/api/schema.ts --root-types --root-types-no-schema-prefix --enum-values",
     "preview": "vite preview"
   },
@@ -40,6 +41,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/vite": "^4.3.4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
