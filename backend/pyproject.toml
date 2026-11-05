@@ -16,6 +16,8 @@ dependencies = [
 [dependency-groups]
 dev = [
     "mypy>=2.4",
+    "pytest>=9.2",
+    "pytest-asyncio>=1.4",
     "ruff>=0.17",
 ]
 
@@ -45,3 +47,14 @@ known-third-party = ["alembic"]
 python_version = "3.14"
 strict = true
 plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["--strict-markers", "--strict-config"]
+# Every test is async-capable without a marker, and they share one event loop so the
+# database engine (bound to the loop it first connects on) is reused across tests.
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+filterwarnings = ["error"]

@@ -14,7 +14,7 @@ ACTIVITY_WINDOW = timedelta(days=30)
 async def get_stats(session: AsyncSession) -> DashboardStats:
     """Aggregates computed in the database, so the cost doesn't grow with what's sent back."""
     rows = await session.execute(select(Patient.status, func.count()).group_by(Patient.status))
-    counts: dict[PatientStatus, int] = {status: count for status, count in rows.tuples()}
+    counts: dict[PatientStatus, int] = {status: count for status, count in rows}
 
     since = datetime.now(UTC) - ACTIVITY_WINDOW
     visits_last_30_days = await session.scalar(
