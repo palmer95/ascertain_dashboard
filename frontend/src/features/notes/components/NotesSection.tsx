@@ -38,9 +38,12 @@ export function NotesSection({ patientId }: { patientId: string }) {
           <h2 id={headingId} ref={headingRef} tabIndex={-1} className="font-medium outline-none">
             Notes
             {notes && (
-              <span className="ml-1.5 font-normal text-muted-foreground tabular-nums">
-                ({notes.length})
-              </span>
+              <>
+                {/* A real space, so it's read as "Notes (2)", not "Notes(2)". */}{' '}
+                <span className="font-normal text-muted-foreground tabular-nums">
+                  ({notes.length})
+                </span>
+              </>
             )}
           </h2>
           <CardDescription>Clinical notes, newest first</CardDescription>

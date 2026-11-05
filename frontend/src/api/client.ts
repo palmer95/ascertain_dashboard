@@ -7,10 +7,12 @@ import type { paths } from './schema'
  * Typed client generated from the backend's OpenAPI schema (`pnpm gen:api`): paths, params,
  * bodies and responses are all checked at compile time.
  *
- * Always a relative `/api` base: the Vite proxy (dev) and nginx (prod) forward it to the
- * backend, so no API URL is baked into the build and no CORS is needed.
+ * Always the page's own origin + `/api`: the Vite proxy (dev) and nginx (prod) forward it to
+ * the backend, so no API URL is baked into the build and no CORS is needed. It's spelled out
+ * as an absolute URL (same thing in a browser) because `fetch` outside a browser, as in
+ * tests, can't resolve a relative one.
  */
-export const api = createClient<paths>({ baseUrl: '/api' })
+export const api = createClient<paths>({ baseUrl: `${window.location.origin}/api` })
 
 /**
  * Resolve an `api.*` call to its data, or throw an `ApiError`.
