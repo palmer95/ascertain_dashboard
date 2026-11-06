@@ -101,8 +101,11 @@ export function usePatient(id: string, { enabled = true } = {}) {
   })
 }
 
-/** Lists and dashboard counts show every patient, so any create, edit or delete refreshes them. */
-function invalidateOverviews(queryClient: QueryClient) {
+/**
+ * Lists and dashboard counts show every patient, so any create, edit or delete refreshes them,
+ * as does a note change (a patient's last visit is the time of their latest note).
+ */
+export function invalidateOverviews(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: patientKeys.lists() })
   void queryClient.invalidateQueries({ queryKey: dashboardKeys.stats })
 }

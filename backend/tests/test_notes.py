@@ -103,3 +103,41 @@ async def test_cannot_delete_another_patients_note(
     assert response.status_code == 404
     assert response.json()["error"]["message"] == "Note not found"
     assert len((await client.get(f"/patients/{owner.id}/notes")).json()) == 1
+
+
+async def last_visit(client: AsyncClient, patient: Patient) -> tuple[str | None, str]:
+    body = (await client.get(f"/patients/{patient.id}")).json()
+    return body["last_visit_at"], body["updated_at"]
+
+
+async def test_notes_keep_the_last_visit_up_to_date(client: AsyncClient, patient: Patient) -> None:
+    url = f"/patients/{patient.id}/notes"
+    never, updated_at = await last_visit(client, patient)
+    assert never is None
+
+    march = (await client.post(url, json=note("2026-03-01T09:30:00Z"))).json()
+    assert await last_visit(client, patient) == ("2026-03-01T09:30:00Z", updated_at)
+
+    # An older note doesn't move it back; a newer one moves it forward.
+    january = (await client.post(url, json=note("2026-01-01T09:30:00Z"))).json()
+    assert (await last_visit(client, patient))[0] == "2026-03-01T09:30:00Z"
+    april = (await client.post(url, json=note("2026-04-01T09:30:00Z"))).json()
+    assert (await last_visit(client, patient))[0] == "2026-04-01T09:30:00Z"
+
+    # Deleting recomputes from the notes left, back to "no visits yet" when none remain.
+    await client.delete(f"{url}/{april['id']}")
+    assert (await last_visit(client, patient))[0] == "2026-03-01T09:30:00Z"
+    await client.delete(f"{url}/{march['id']}")
+    assert (await last_visit(client, patient))[0] == "2026-01-01T09:30:00Z"
+    await client.delete(f"{url}/{january['id']}")
+    # Notes aren't edits to the record, so its "last updated" time never moved.
+    assert await last_visit(client, patient) == (None, updated_at)
+
+
+async def test_a_new_note_shows_on_the_dashboard(client: AsyncClient, patient: Patient) -> None:
+    await client.post(f"/patients/{patient.id}/notes", json=note(datetime.now(UTC)))
+
+    stats = (await client.get("/dashboard/stats")).json()
+
+    assert stats["visits_last_30_days"] == 1
+    assert [visit["id"] for visit in stats["recent_visits"]] == [str(patient.id)]

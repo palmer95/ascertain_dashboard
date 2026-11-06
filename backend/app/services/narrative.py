@@ -11,6 +11,7 @@ patient's name, date of birth or contact details.
 """
 
 import hashlib
+import html
 import logging
 from collections import OrderedDict
 from collections.abc import Sequence
@@ -97,8 +98,9 @@ def _client() -> anthropic.AsyncAnthropic | None:
     )
 
 
-# The narrative depends only on the prompt, so identical prompts reuse it: reloading a chart
-# doesn't call the model again, but any note change produces a new prompt and a fresh summary.
+# The narrative depends only on what's sent (model, instructions, prompt), so identical requests
+# reuse it: reloading a chart doesn't call the model again, but any note change produces a new
+# prompt and a fresh summary.
 _CACHE_SIZE = 256
 _cache: OrderedDict[str, SummaryNarrative] = OrderedDict()
 
@@ -108,7 +110,7 @@ async def _llm_narrative(
 ) -> SummaryNarrative | None:
     model = get_settings().anthropic_model
     prompt = _build_prompt(patient, notes)
-    key = hashlib.sha256(f"{model}\n{prompt}".encode()).hexdigest()
+    key = hashlib.sha256(f"{model}\n{SYSTEM_PROMPT}\n{prompt}".encode()).hexdigest()
     if (cached := _cache.get(key)) is not None:
         _cache.move_to_end(key)
         return cached
@@ -155,11 +157,11 @@ async def _llm_narrative(
 
 def _build_prompt(patient: Patient, notes: Sequence[PatientNote]) -> str:
     age = age_on(patient.date_of_birth, date.today())
-    conditions = ", ".join(patient.conditions) or "none recorded"
-    allergies = ", ".join(patient.allergies) or "no known allergies"
+    conditions = _text(", ".join(patient.conditions)) or "none recorded"
+    allergies = _text(", ".join(patient.allergies)) or "no known allergies"
     # Oldest first reads as a timeline.
     note_lines = "\n".join(
-        f'<note date="{_day(note)}">\n{note.content}\n</note>' for note in reversed(notes)
+        f'<note date="{_day(note)}">\n{_text(note.content)}\n</note>' for note in reversed(notes)
     )
     return (
         f"Patient context: {age}-year-old. Conditions: {conditions}. "
@@ -180,6 +182,11 @@ def _tidy(narrative: SummaryNarrative) -> SummaryNarrative:
         recent_changes=items(narrative.recent_changes),
         plan=items(narrative.plan),
     )
+
+
+def _text(value: str) -> str:
+    """Escape user-entered text, so a note containing `</notes>` can't close the tags around it."""
+    return html.escape(value, quote=False)
 
 
 def _day(note: PatientNote) -> str:

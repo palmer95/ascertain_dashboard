@@ -3,8 +3,7 @@ import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/r
 import { api, unwrap } from '@/api/client'
 import { ApiError } from '@/api/errors'
 import type { NoteCreate, NoteRead } from '@/api/schema'
-import { patientKeys } from '@/features/patients/queries'
-import { summaryKeys } from '@/features/summary/queries'
+import { invalidateOverviews, patientKeys } from '@/features/patients/queries'
 
 /** Matches the backend's limit on note content. */
 export const NOTE_MAX_LENGTH = 5000
@@ -38,9 +37,10 @@ function newestFirst(a: NoteRead, b: NoteRead) {
 
 /**
  * After a note is added or removed: the list is patched in place so the change shows at
- * once, then refetched to stay in step with the server. The summary is refetched because
- * its narrative is written from the notes. Neither is awaited, so the form or dialog
- * doesn't wait on a summary that may take seconds to generate.
+ * once, then everything under the patient is refetched: the notes, the summary (written from
+ * them) and the record (its last visit is the latest note's time). Patient lists and the
+ * dashboard show last visits too. Nothing is awaited, so the form or dialog doesn't wait on
+ * a summary that may take seconds to generate.
  */
 function useSyncNotes(patientId: string) {
   const queryClient = useQueryClient()
@@ -48,8 +48,8 @@ function useSyncNotes(patientId: string) {
     queryClient.setQueryData<NoteRead[]>(noteKeys.list(patientId), (notes) =>
       notes ? update(notes) : notes,
     )
-    void queryClient.invalidateQueries({ queryKey: noteKeys.list(patientId) })
-    void queryClient.invalidateQueries({ queryKey: summaryKeys.detail(patientId) })
+    void queryClient.invalidateQueries({ queryKey: patientKeys.detail(patientId) })
+    invalidateOverviews(queryClient)
   }
 }
 

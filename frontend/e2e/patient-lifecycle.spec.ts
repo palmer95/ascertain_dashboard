@@ -31,6 +31,7 @@ test('register a patient, add a note, see the summary, edit and delete them', as
   patients.track(page.url().split('/').at(-1) ?? '')
   await expect(page.getByRole('heading', { level: 1 })).toContainText(lastName)
   await expect(page.getByText('Penicillin').first()).toBeVisible()
+  await expect(page.getByText('No visits yet')).toBeVisible()
 
   // Add a note
   await page.getByRole('button', { name: 'Add note' }).click()
@@ -42,6 +43,8 @@ test('register a patient, add a note, see the summary, edit and delete them', as
   const notes = page.getByRole('region', { name: /^Notes/ })
   await expect(notes.getByText('Initial visit. BP 150/95, starting lisinopril.')).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Notes (1)' })).toBeVisible()
+  // The note is the patient's first visit
+  await expect(page.getByText(/Last visit [A-Z][a-z]{2} \d{1,2}, \d{4}/)).toBeVisible()
 
   // The summary picks up the note (written by the model if a key is set, else the template)
   await expect(page.getByText(/^(AI-generated|Template)$/)).toBeVisible()

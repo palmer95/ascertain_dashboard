@@ -128,6 +128,10 @@ frontend/src/
   age is computed from date of birth, never stored; allergies and conditions are text arrays.
   Coded terminologies (SNOMED CT, ICD-10, RxNorm) would be the next step. IDs are UUIDv7:
   not guessable, and they index well.
+- **A note is a visit.** Each note records an encounter (a visit or a call), so a patient's last
+  visit is the time of their latest note. It's stored on the patient, so the list can sort and
+  filter by it with an index, and updated in the same transaction as every note added or
+  deleted.
 - **Dates of birth stay plain dates end to end.** Parsing `"1990-05-01"` as a JavaScript `Date`
   treats it as UTC midnight, which shows US users the day before.
 - **Schema changes go through Alembic**, run by the container on startup. The seed is
@@ -165,8 +169,9 @@ narrative of their notes: an overview, recent changes and the plan.
   from the database, so the model can't invent an allergy. It writes only the narrative, as
   structured output in a fixed schema.
 - **Only what's needed is sent.** The model receives age, conditions, allergies and the latest
-  20 notes. It never receives name, date of birth or contact details. The prompt treats note
-  text as content to summarise, never as instructions.
+  20 notes. It never receives name, date of birth or contact details. Note text is escaped, so
+  it can't break out of the tags around it, and the prompt treats it as content to summarise,
+  never as instructions.
 - **It always works.** With no key, on any error, or after 10 seconds, the summary falls back to
   a template. The response says which one it is (`source: "llm" | "template"`) and the UI labels
   it "AI-generated" or "Template".
