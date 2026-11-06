@@ -740,6 +740,28 @@
           }
         }
       }
+    },
+    "/config": {
+      "get": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Settings for the frontend",
+        "description": "The clinic's time zone, so the app shows times on the same calendar the API uses.",
+        "operationId": "get_config",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientConfig"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -757,6 +779,24 @@
           "O-"
         ],
         "title": "BloodType"
+      },
+      "ClientConfig": {
+        "properties": {
+          "clinic_timezone": {
+            "type": "string",
+            "title": "Clinic Timezone",
+            "description": "IANA time zone the clinic's calendar dates and times are shown in",
+            "examples": [
+              "America/New_York"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "clinic_timezone"
+        ],
+        "title": "ClientConfig",
+        "description": "Settings the frontend needs to agree with the API."
       },
       "DashboardStats": {
         "properties": {

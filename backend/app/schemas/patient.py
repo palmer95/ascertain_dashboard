@@ -23,7 +23,7 @@ from pydantic import (
     field_validator,
 )
 
-from app.core.dates import age_on
+from app.core.dates import age_on, clinic_today
 from app.models.enums import BloodType, PatientStatus
 
 MIN_DATE_OF_BIRTH = date(1900, 1, 1)
@@ -138,7 +138,7 @@ class PatientWrite(BaseModel):
     @field_validator("date_of_birth")
     @classmethod
     def _date_of_birth_in_range(cls, value: date) -> date:
-        if value > date.today():
+        if value > clinic_today():
             raise ValueError("Date of birth cannot be in the future")
         if value < MIN_DATE_OF_BIRTH:
             raise ValueError("Date of birth must be on or after 1900-01-01")
@@ -179,7 +179,7 @@ class PatientRead(BaseModel):
     @property
     def age(self) -> int:
         """Derived from date_of_birth on every read; never stored, so it can't go stale."""
-        return age_on(self.date_of_birth, date.today())
+        return age_on(self.date_of_birth, clinic_today())
 
 
 class PatientSort(StrEnum):

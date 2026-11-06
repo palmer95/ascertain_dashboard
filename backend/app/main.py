@@ -5,7 +5,7 @@ from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import configure_logging
 from app.core.middleware import RequestLoggingMiddleware
-from app.routers import dashboard, health, notes, patients, summary
+from app.routers import config, dashboard, health, notes, patients, summary
 
 
 def _operation_id(route: APIRoute) -> str:
@@ -32,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(notes.router)
     app.include_router(summary.router)
     app.include_router(dashboard.router)
+    app.include_router(config.router)
     return app
 
 

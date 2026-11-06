@@ -15,14 +15,13 @@ import html
 import logging
 from collections import OrderedDict
 from collections.abc import Sequence
-from datetime import date
 from functools import lru_cache
 
 import anthropic
 from pydantic import ValidationError
 
 from app.core.config import get_settings
-from app.core.dates import age_on
+from app.core.dates import age_on, clinic_date, clinic_today
 from app.models import Patient, PatientNote
 from app.schemas.summary import SummaryNarrative, SummarySource
 
@@ -156,7 +155,7 @@ async def _llm_narrative(
 
 
 def _build_prompt(patient: Patient, notes: Sequence[PatientNote]) -> str:
-    age = age_on(patient.date_of_birth, date.today())
+    age = age_on(patient.date_of_birth, clinic_today())
     conditions = _text(", ".join(patient.conditions)) or "none recorded"
     allergies = _text(", ".join(patient.allergies)) or "no known allergies"
     # Oldest first reads as a timeline.
@@ -190,7 +189,8 @@ def _text(value: str) -> str:
 
 
 def _day(note: PatientNote) -> str:
-    return note.taken_at.date().isoformat()
+    """The day the note was taken, on the clinic's calendar (not UTC's)."""
+    return clinic_date(note.taken_at).isoformat()
 
 
 def _excerpt(text: str) -> str:

@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { applyServerErrors } from '@/lib/forms'
-import { toDateTimeLocalValue } from '@/lib/format'
+import { clinicTimeZoneName, fromDateTimeLocalValue, toDateTimeLocalValue } from '@/lib/format'
 
 import { NOTE_MAX_LENGTH, useCreateNote } from '../queries'
 
@@ -24,13 +24,16 @@ const noteFormSchema = z.object({
     .trim()
     .min(1, 'Write the note before saving')
     .max(NOTE_MAX_LENGTH, `Notes can be at most ${NOTE_MAX_LENGTH.toLocaleString()} characters`),
-  // A `datetime-local` value: wall-clock time in the user's time zone, no offset.
+  // A `datetime-local` value: wall-clock time on the clinic's clock, no offset.
   taken_at: z
     .string()
     .min(1, 'Enter when the note was taken')
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Enter a valid date and time')
     .refine(
-      (value) => new Date(value).getTime() <= Date.now() + CLOCK_SKEW_MS,
+      (value) => !Number.isNaN(fromDateTimeLocalValue(value).getTime()),
+      'Enter a valid date and time',
+    )
+    .refine(
+      (value) => fromDateTimeLocalValue(value).getTime() <= Date.now() + CLOCK_SKEW_MS,
       "The time can't be in the future",
     ),
 })
@@ -57,8 +60,9 @@ export function NoteForm({ patientId, onDone }: { patientId: string; onDone: () 
   const onSubmit = handleSubmit(async ({ content, taken_at }) => {
     setFormError(null)
     try {
-      // The browser knows the user's time zone, so it converts to an offset-aware timestamp.
-      await createNote.mutateAsync({ content, taken_at: new Date(taken_at).toISOString() })
+      // Sent as an absolute instant, so the server never has to guess the time zone.
+      const takenAt = fromDateTimeLocalValue(taken_at).toISOString()
+      await createNote.mutateAsync({ content, taken_at: takenAt })
       onDone()
     } catch (error) {
       // On failure the form keeps what was typed, so nothing has to be re-entered.
@@ -68,6 +72,7 @@ export function NoteForm({ patientId, onDone }: { patientId: string; onDone: () 
 
   const contentErrorId = `${id}-content-error`
   const takenAtErrorId = `${id}-taken-at-error`
+  const takenAtHintId = `${id}-taken-at-hint`
 
   return (
     <form
@@ -112,10 +117,13 @@ export function NoteForm({ patientId, onDone }: { patientId: string; onDone: () 
           type="datetime-local"
           max={toDateTimeLocalValue(new Date())}
           aria-invalid={errors.taken_at ? true : undefined}
-          aria-describedby={errors.taken_at ? takenAtErrorId : undefined}
+          aria-describedby={cn(takenAtHintId, errors.taken_at && takenAtErrorId)}
           className="bg-background"
           {...register('taken_at')}
         />
+        <p id={takenAtHintId} className="text-xs text-muted-foreground">
+          Clinic time ({clinicTimeZoneName()})
+        </p>
         {errors.taken_at && (
           <p id={takenAtErrorId} className="text-xs text-destructive">
             {errors.taken_at.message}

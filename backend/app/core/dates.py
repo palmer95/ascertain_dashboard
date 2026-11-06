@@ -1,4 +1,28 @@
-from datetime import date
+"""Calendar dates for the clinic.
+
+Timestamps are stored and compared as instants (UTC). Whenever a *calendar date* is needed,
+such as today's date for an age or the day a note was taken, it's read in the clinic's time
+zone (`CLINIC_TIMEZONE`), so an evening visit never lands on the next day.
+"""
+
+from datetime import UTC, date, datetime
+
+from app.core.config import get_settings
+
+
+def _now() -> datetime:
+    """The current instant. A separate function so tests can move the clock."""
+    return datetime.now(UTC)
+
+
+def clinic_today() -> date:
+    """Today's date on the clinic's wall clock."""
+    return clinic_date(_now())
+
+
+def clinic_date(moment: datetime) -> date:
+    """The clinic's calendar date at an instant."""
+    return moment.astimezone(get_settings().clinic_tz).date()
 
 
 def age_on(date_of_birth: date, on: date) -> int:

@@ -31,8 +31,9 @@ On first start the backend runs the database migrations and seeds 150 synthetic 
 about 360 clinical notes. Both steps are idempotent: restarting doesn't duplicate anything.
 `docker compose down -v` resets the data.
 
-**`.env` is optional.** Every setting has a working default. To change ports or turn on AI
-summaries, `cp .env.example .env` and edit it.
+**`.env` is optional.** Every setting has a working default. To change ports, the clinic's
+time zone (`CLINIC_TIMEZONE`, default `America/New_York`) or turn on AI summaries,
+`cp .env.example .env` and edit it.
 
 **AI summaries (optional):** set `ANTHROPIC_API_KEY` in `.env` and restart. Without a key the
 summary is built from a template, so the app works with no configuration (see
@@ -132,6 +133,16 @@ frontend/src/
   visit is the time of their latest note. It's stored on the patient, so the list can sort and
   filter by it with an index, and updated in the same transaction as every note added or
   deleted.
+- **Notes never change a patient's status.** A note can follow a discharge (a summary, a
+  follow-up call, a correction) and can be dated in the past, so adding one doesn't reactivate a
+  discharged patient. Status changes are deliberate edits. A real workflow would ask "Reactivate
+  this patient?" when noting a discharged one, or model admissions and discharges as events.
+- **One clock: the clinic's.** Timestamps are stored as instants (UTC). Calendar dates (today's
+  date for ages and the "not in the future" check, the day a note was taken in the summary) are
+  read in `CLINIC_TIMEZONE`. The frontend shows times on that clock too, with the zone named
+  ("10:00 PM ET"), and the note form reads its time on it. So an evening note has the same date
+  in the list and the summary, and a birthday turns over at the clinic's midnight, even for staff
+  working from another time zone. Tests cover the minutes either side of midnight.
 - **Dates of birth stay plain dates end to end.** Parsing `"1990-05-01"` as a JavaScript `Date`
   treats it as UTC midnight, which shows US users the day before.
 - **Schema changes go through Alembic**, run by the container on startup. The seed is
@@ -208,7 +219,8 @@ Left out to keep the scope honest, roughly in priority order:
 - **Encryption** in transit (TLS) and at rest, secrets in a secret manager, and rate limiting.
 - A **BAA** with the model provider, or a HIPAA-eligible hosted model.
 - A **shared summary cache** (for example Redis) once there's more than one API process.
-- Summary dates are formatted in UTC; the browser should send its time zone.
+- A **readiness check** that confirms the database is reachable, separate from `/health`
+  (which only reports that the process is up), for an orchestrator to route traffic by.
 - **Privacy in logs is already handled:** logs never include request or response bodies, and
   nginx drops query strings because search terms are patient names.
 

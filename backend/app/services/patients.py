@@ -1,7 +1,7 @@
 """Patient persistence. Routers stay thin (HTTP concerns only); this layer owns the queries."""
 
 import re
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
@@ -9,7 +9,7 @@ from sqlalchemy import ColumnElement, UnaryExpression, and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import QueryableAttribute
 
-from app.core.dates import latest_birth_date_for_age
+from app.core.dates import clinic_today, latest_birth_date_for_age
 from app.models import Patient
 from app.schemas.patient import (
     LastVisit,
@@ -82,7 +82,7 @@ def _filters(params: PatientListParams) -> list[ColumnElement[bool]]:
     if params.state:
         filters.append(Patient.state.in_(params.state))
     # Ages are compared as dates of birth, so the date_of_birth index applies.
-    today = date.today()
+    today = clinic_today()
     if params.min_age is not None:
         filters.append(Patient.date_of_birth <= latest_birth_date_for_age(params.min_age, today))
     if params.max_age is not None:

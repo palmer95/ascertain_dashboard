@@ -91,6 +91,7 @@ dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "pydantic-settings" },
     { name = "sqlalchemy", extra = ["asyncio"] },
+    { name = "tzdata" },
 ]
 
 [package.dev-dependencies]
@@ -110,6 +111,7 @@ requires-dist = [
     { name = "fastapi", extras = ["standard"], specifier = ">=0.162" },
     { name = "pydantic-settings", specifier = ">=2.16" },
     { name = "sqlalchemy", extras = ["asyncio"], specifier = ">=2.1" },
+    { name = "tzdata", specifier = ">=2025.2" },
 ]
 
 [package.metadata.requires-dev]
