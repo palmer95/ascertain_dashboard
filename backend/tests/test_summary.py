@@ -5,7 +5,6 @@ model path is exercised by swapping in a fake client.
 """
 
 from dataclasses import dataclass, field
-from datetime import date
 from types import SimpleNamespace
 from typing import Any
 from uuid import uuid4
@@ -15,6 +14,7 @@ import httpx2
 import pytest
 from httpx import AsyncClient
 
+from app.core.dates import clinic_today
 from app.models import Patient
 from app.schemas.summary import SummaryNarrative
 from app.services import narrative
@@ -84,9 +84,8 @@ async def test_record_facts_come_from_the_database(client: AsyncClient, patient:
     assert body["blood_type"] == "O+"
     assert body["allergies"] == ["Penicillin"]
     assert body["conditions"] == ["Hypertension"]
-    assert body["age"] == date.today().year - 1980 - (
-        (date.today().month, date.today().day) < (5, 17)
-    )
+    today = clinic_today()  # ages count on the clinic's calendar, not the machine's
+    assert body["age"] == today.year - 1980 - ((today.month, today.day) < (5, 17))
 
 
 async def test_no_notes(client: AsyncClient, patient: Patient) -> None:

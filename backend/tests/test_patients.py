@@ -1,12 +1,13 @@
 """CRUD for /patients, its validation, and its error responses."""
 
-from datetime import date, timedelta
+from datetime import timedelta
 from typing import Any
 from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
 
+from app.core.dates import clinic_today
 from tests.conftest import patient_payload
 
 
@@ -65,7 +66,7 @@ class TestCreate:
             ("postal_code", "1234"),
             ("blood_type", "C+"),
             ("status", "critical"),
-            ("date_of_birth", (date.today() + timedelta(days=1)).isoformat()),
+            ("date_of_birth", (clinic_today() + timedelta(days=1)).isoformat()),
             ("date_of_birth", "1899-12-31"),
             ("first_name", ""),
             ("allergies", ["x" * 201]),

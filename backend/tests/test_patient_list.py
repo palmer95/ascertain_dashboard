@@ -6,7 +6,7 @@ from typing import Any
 import pytest
 from httpx import AsyncClient
 
-from app.core.dates import latest_birth_date_for_age
+from app.core.dates import clinic_today, latest_birth_date_for_age
 from app.models.enums import BloodType, PatientStatus
 from tests.conftest import PatientFactory
 
@@ -18,8 +18,9 @@ async def names(client: AsyncClient, query: str = "") -> list[str]:
 
 
 def born_aged(age: int) -> date:
-    """A date of birth that makes someone exactly `age` today."""
-    return latest_birth_date_for_age(age, date.today())
+    """A date of birth that makes someone exactly `age` today (on the clinic's calendar, as the
+    API counts ages; the machine's own date can already be tomorrow)."""
+    return latest_birth_date_for_age(age, clinic_today())
 
 
 class TestPagination:
