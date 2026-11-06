@@ -66,8 +66,8 @@ CI fails if it's out of date.
 
 | Suite           | Command (directory)           | What it covers                                                                                                       |
 | --------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| API (78)        | `uv run pytest` (`backend/`)  | Every endpoint, validation, errors, filters, summary fallback, against a real Postgres test DB                       |
-| Components (28) | `pnpm test` (`frontend/`)     | Patient form, notes, tag input, list search and filters, with the API mocked by MSW                                  |
+| API (90)        | `uv run pytest` (`backend/`)  | Every endpoint, validation, errors, filters, summary fallback, against a real Postgres test DB                       |
+| Components (33) | `pnpm test` (`frontend/`)     | Patient form, notes, tag input, list search and filters, with the API mocked by MSW                                  |
 | End-to-end (5)  | `pnpm test:e2e` (`frontend/`) | Main journeys in a real browser: create → note → summary → edit → delete, search and filters, dashboard, theme, 404s |
 
 Lint, formatting and strict types: `uv run ruff check . && uv run ruff format --check . && uv run mypy .`
